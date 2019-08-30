@@ -4,8 +4,19 @@
   "description": "",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo TODO: Test",
+    "build": "tsc",
+    "format": "prettier --write \"src/**/*.tsx\"",
+    "lint": "tslint -p tsconfig.json",
+    "prepare": "npm run build",
+    "prepublishOnly": "npm test && npm run lint",
+    "preversion": "npm run lint",
+    "version": "npm run format && git add -A src",
+    "postversion": "git push && git push --tags"
   },
   "repository": {
     "type": "git",
@@ -17,11 +28,23 @@
     "url": "https://github.com/gkkachi/react-cached-firestore/issues"
   },
   "homepage": "https://github.com/gkkachi/react-cached-firestore#readme",
-  "devDependencies": {},
-  "dependencies": {
+  "devDependencies": {
     "@types/react": "^16.9.2",
     "firebase": "^6.4.2",
+    "prettier": "^1.18.2",
     "react": "^16.9.0",
+    "tslint": "^5.19.0",
+    "tslint-config-prettier": "^1.18.0",
     "typescript": "^3.6.2"
-  }
+  },
+  "dependencies": {},
+  "peerDependencies": {
+    "react": ">=16.8"
+  },
+  "keywords": [
+    "firestore",
+    "react-firestore",
+    "react-firebase",
+    "firebase"
+  ]
 }
