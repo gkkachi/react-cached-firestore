@@ -34,14 +34,17 @@ const App: React.FC = () => {
 ### ```AmazingApp.tsx```
 
 ```tsx
-import { useEffect } from 'react';
-import 'firebase/firestore'
 import { useDocumentsContext } from 'react-cached-firestore'
 
 const AmazingApp: React.FC = () => {
     const path: string = 'PATH/TO/DOCUMENT'
-    const { subscribe, docs } = useDocumentsContext()
-    useEffect(() => subscribe(path))   // <- Don't forget this!
+    const { getDoc } = useDocumentsContext()
+
+    // if you want the latest data,
+    const snap = getDoc(path)
+
+    // if you do not need the latest data,
+    // const snap = getDoc(path, false)
     
     const snap = docs[path]
     
