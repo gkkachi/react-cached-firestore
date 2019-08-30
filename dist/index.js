@@ -14,9 +14,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-var react_1 = __importDefault(require("react"));
 require("firebase/app");
 require("firebase/firestore");
+var react_1 = __importDefault(require("react"));
 var DocState;
 (function (DocState) {
     DocState[DocState["UNDEFINED"] = 0] = "UNDEFINED";
@@ -24,15 +24,12 @@ var DocState;
     DocState[DocState["CONNECTED"] = 2] = "CONNECTED";
     DocState[DocState["UNCONNECTED"] = 3] = "UNCONNECTED";
 })(DocState || (DocState = {}));
-var debugState = function (x, y, path) {
-    console.debug("STATE:\t" + DocState[x] + "\t->\t" + DocState[y] + "\t(path=" + path + ")");
-};
 var initialState = { docs: {}, funcs: {}, docStates: {} };
 var Context = react_1.default.createContext({
-    subscribe: function (_) { },
-    unsubscribe: function (_) { },
+    docs: {},
     getDoc: function (_) { return undefined; },
-    docs: {}
+    subscribe: function (_) { return _; },
+    unsubscribe: function (_) { return _; },
 });
 var Provider = function (props) {
     var _a = react_1.default.useState(initialState), state = _a[0], setState = _a[1];
@@ -40,49 +37,39 @@ var Provider = function (props) {
         if (once === void 0) { once = false; }
         var docState = state.docStates[path] || DocState.UNDEFINED;
         if (docState === DocState.UNDEFINED || docState === DocState.UNCONNECTED) {
-            console.debug("onSnapshot (path=" + path + " state=" + DocState[docState] + ")");
-            var f_1 = props.app.firestore().doc(path).onSnapshot(function (snap) {
-                var docStateNow = state.docStates[path];
-                var docStateNext = DocState.CONNECTED;
+            var f_1 = props.app
+                .firestore()
+                .doc(path)
+                .onSnapshot(function (snap) {
                 var newState = __assign({}, state);
-                newState.docStates[path] = docStateNext;
+                newState.docStates[path] = DocState.CONNECTED;
                 newState.docs[path] = snap;
-                debugState(docStateNow, docStateNext, path);
                 setState(newState);
                 if (once) {
                     unsubscribe(path);
                 }
             }, function (error) {
-                var docStateNow = state.docStates[path];
-                var docStateNext = DocState.UNDEFINED;
-                console.error(error);
                 f_1();
                 var newState = __assign({}, state);
-                newState.docStates[path] = docStateNext;
-                debugState(docStateNow, docStateNext, path);
+                newState.docStates[path] = DocState.UNDEFINED;
                 setState(newState);
             });
-            var docStateNow = docState;
-            var docStateNext = DocState.CONNECTING;
-            var newState = __assign({}, state);
-            newState.docStates[path] = docStateNext;
-            if (newState.funcs[path]) {
-                newState.funcs[path]();
+            var newStateX = __assign({}, state);
+            newStateX.docStates[path] = DocState.CONNECTING;
+            if (newStateX.funcs[path]) {
+                newStateX.funcs[path]();
             }
-            newState.funcs[path] = f_1;
-            debugState(docStateNow, docStateNext, path);
-            setState(newState);
+            newStateX.funcs[path] = f_1;
+            setState(newStateX);
         }
     };
     var unsubscribe = function (path) {
         var docState = state.docStates[path] || DocState.UNDEFINED;
         if (docState === DocState.CONNECTED) {
-            var docStateNow = docState;
             var docStateNext = DocState.UNCONNECTED;
             state.funcs[path]();
             var newState = __assign({}, state);
             newState.docStates[path] = docStateNext;
-            debugState(docStateNow, docStateNext, path);
             setState(newState);
         }
     };
@@ -96,7 +83,7 @@ var Provider = function (props) {
         return doc;
     };
     var docs = state.docs;
-    return (react_1.default.createElement(Context.Provider, { value: { subscribe: subscribe, unsubscribe: unsubscribe, docs: docs, getDoc: getDoc } }, props.children));
+    return react_1.default.createElement(Context.Provider, { value: { subscribe: subscribe, unsubscribe: unsubscribe, docs: docs, getDoc: getDoc } }, props.children);
 };
 exports.default = Provider;
 exports.useDocumentsContext = function () { return react_1.default.useContext(Context); };

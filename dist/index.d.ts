@@ -1,19 +1,18 @@
-import React from 'react';
 import 'firebase/app';
 import 'firebase/firestore';
-declare type MyType<T> = {
+import React from 'react';
+interface IPathObj<T> {
     [path: string]: T;
-};
-declare type DocType = firebase.firestore.DocumentSnapshot;
-declare type ContextType = {
+}
+interface IContextType {
     subscribe: (path: string) => void;
     unsubscribe: (path: string) => void;
-    getDoc: (path: string, latest?: boolean) => DocType | undefined;
-    docs: MyType<DocType>;
-};
+    getDoc: (path: string, latest?: boolean) => firebase.firestore.DocumentSnapshot | undefined;
+    docs: IPathObj<firebase.firestore.DocumentSnapshot>;
+}
 declare const Provider: React.FC<React.PropsWithChildren<{
     app: firebase.app.App;
 }>>;
 export default Provider;
-export declare const useDocumentsContext: () => ContextType;
-export declare const DocumentsContext: React.Context<ContextType>;
+export declare const useDocumentsContext: () => IContextType;
+export declare const DocumentsContext: React.Context<IContextType>;
