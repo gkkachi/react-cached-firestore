@@ -2,6 +2,8 @@ import 'firebase/app';
 import 'firebase/firestore';
 import React from 'react';
 
+import myUseReducer from './myUseReducer';
+
 enum DocState {
   UNDEFINED,
   CONNECTING,
@@ -9,80 +11,59 @@ enum DocState {
   UNCONNECTED,
 }
 
-interface IPathObj<T> {
-  [path: string]: T;
-}
-
-interface IStateType {
-  docs: IPathObj<firebase.firestore.DocumentSnapshot>;
-  funcs: IPathObj<() => void>;
-  docStates: IPathObj<DocState>;
-}
-const initialState = { docs: {}, funcs: {}, docStates: {} };
-
 interface IContextType {
   subscribe: (path: string) => void;
   unsubscribe: (path: string) => void;
   getDoc: (path: string, latest?: boolean) => firebase.firestore.DocumentSnapshot | undefined;
-  docs: IPathObj<firebase.firestore.DocumentSnapshot>;
 }
 const Context = React.createContext<IContextType>({
-  docs: {},
   getDoc: _ => undefined,
   subscribe: _ => _,
   unsubscribe: _ => _,
 });
 
 const Provider: React.FC<React.PropsWithChildren<{ app: firebase.app.App }>> = props => {
-  const [state, setState] = React.useState<IStateType>(initialState);
+  const [docs, setDoc] = myUseReducer<firebase.firestore.DocumentSnapshot>();
+  const [funcs, addFunc, delFunc] = myUseReducer<() => void>();
+  const [docStates, setDocState] = myUseReducer<DocState>();
 
   const subscribe = (path: string, once = false) => {
-    const docState = state.docStates[path] || DocState.UNDEFINED;
+    const docState = docStates[path] || DocState.UNDEFINED;
 
     if (docState === DocState.UNDEFINED || docState === DocState.UNCONNECTED) {
+      setDocState(path, DocState.CONNECTING);
+      console.debug(`onSnapshot:\t(path=${path})`)
       const f = props.app
         .firestore()
         .doc(path)
         .onSnapshot(
           snap => {
-            const newState: IStateType = { ...state };
-            newState.docStates[path] = DocState.CONNECTED;
-            newState.docs[path] = snap;
-            setState(newState);
+            setDocState(path, DocState.CONNECTED);
+            setDoc(path, snap);
             if (once) {
               unsubscribe(path);
             }
           },
           error => {
+            setDocState(path, DocState.UNDEFINED);
             f();
-            const newState = { ...state };
-            newState.docStates[path] = DocState.UNDEFINED;
-            setState(newState);
           },
         );
-      const newStateX = { ...state };
-      newStateX.docStates[path] = DocState.CONNECTING;
-      if (newStateX.funcs[path]) {
-        newStateX.funcs[path]();
-      }
-      newStateX.funcs[path] = f;
-      setState(newStateX);
+      addFunc(path, f);
     }
   };
 
   const unsubscribe = (path: string) => {
-    const docState = state.docStates[path] || DocState.UNDEFINED;
+    const docState = docStates[path] || DocState.UNDEFINED;
     if (docState === DocState.CONNECTED) {
-      const docStateNext = DocState.UNCONNECTED;
-      state.funcs[path]();
-      const newState = { ...state };
-      newState.docStates[path] = docStateNext;
-      setState(newState);
+      setDocState(path, DocState.UNCONNECTED);
+      funcs[path]();
+      delFunc(path);
     }
   };
 
   const getDoc = (path: string, latest = true): firebase.firestore.DocumentSnapshot | undefined => {
-    const doc = state.docs[path];
+    const doc = docs[path];
     if (doc && !latest) {
       return doc;
     }
@@ -90,9 +71,7 @@ const Provider: React.FC<React.PropsWithChildren<{ app: firebase.app.App }>> = p
     return doc;
   };
 
-  const docs = state.docs;
-
-  return <Context.Provider value={{ subscribe, unsubscribe, docs, getDoc }}>{props.children}</Context.Provider>;
+  return <Context.Provider value={{ subscribe, unsubscribe, getDoc }}>{props.children}</Context.Provider>;
 };
 
 export default Provider;

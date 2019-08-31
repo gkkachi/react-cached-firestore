@@ -10,7 +10,7 @@
   "scripts": {
     "test": "echo TODO: Test",
     "build": "tsc",
-    "format": "prettier --write \"src/**/*.tsx\"",
+    "format": "prettier --write \"src/**/*.ts\" \"src/**/*.tsx\"",
     "lint": "tslint -p tsconfig.json",
     "prepare": "npm run build",
     "prepublishOnly": "npm test && npm run lint",
@@ -35,7 +35,6 @@
     "react": "^16.9.0",
     "tslint": "^5.19.0",
     "tslint-config-prettier": "^1.18.0",
-    "tslint-react-hooks": "^2.2.1",
     "typescript": "^3.6.2"
   },
   "dependencies": {},

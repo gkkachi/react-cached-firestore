@@ -1,15 +1,4 @@
 "use strict";
-var __assign = (this && this.__assign) || function () {
-    __assign = Object.assign || function(t) {
-        for (var s, i = 1, n = arguments.length; i < n; i++) {
-            s = arguments[i];
-            for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
-                t[p] = s[p];
-        }
-        return t;
-    };
-    return __assign.apply(this, arguments);
-};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -17,6 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 require("firebase/app");
 require("firebase/firestore");
 var react_1 = __importDefault(require("react"));
+var myUseReducer_1 = __importDefault(require("./myUseReducer"));
 var DocState;
 (function (DocState) {
     DocState[DocState["UNDEFINED"] = 0] = "UNDEFINED";
@@ -24,66 +14,55 @@ var DocState;
     DocState[DocState["CONNECTED"] = 2] = "CONNECTED";
     DocState[DocState["UNCONNECTED"] = 3] = "UNCONNECTED";
 })(DocState || (DocState = {}));
-var initialState = { docs: {}, funcs: {}, docStates: {} };
 var Context = react_1.default.createContext({
-    docs: {},
     getDoc: function (_) { return undefined; },
     subscribe: function (_) { return _; },
     unsubscribe: function (_) { return _; },
 });
 var Provider = function (props) {
-    var _a = react_1.default.useState(initialState), state = _a[0], setState = _a[1];
+    var _a = myUseReducer_1.default(), docs = _a[0], setDoc = _a[1];
+    var _b = myUseReducer_1.default(), funcs = _b[0], addFunc = _b[1], delFunc = _b[2];
+    var _c = myUseReducer_1.default(), docStates = _c[0], setDocState = _c[1];
     var subscribe = function (path, once) {
         if (once === void 0) { once = false; }
-        var docState = state.docStates[path] || DocState.UNDEFINED;
+        var docState = docStates[path] || DocState.UNDEFINED;
         if (docState === DocState.UNDEFINED || docState === DocState.UNCONNECTED) {
+            setDocState(path, DocState.CONNECTING);
+            console.debug("onSnapshot:\t(path=" + path + ")");
             var f_1 = props.app
                 .firestore()
                 .doc(path)
                 .onSnapshot(function (snap) {
-                var newState = __assign({}, state);
-                newState.docStates[path] = DocState.CONNECTED;
-                newState.docs[path] = snap;
-                setState(newState);
+                setDocState(path, DocState.CONNECTED);
+                setDoc(path, snap);
                 if (once) {
                     unsubscribe(path);
                 }
             }, function (error) {
+                setDocState(path, DocState.UNDEFINED);
                 f_1();
-                var newState = __assign({}, state);
-                newState.docStates[path] = DocState.UNDEFINED;
-                setState(newState);
             });
-            var newStateX = __assign({}, state);
-            newStateX.docStates[path] = DocState.CONNECTING;
-            if (newStateX.funcs[path]) {
-                newStateX.funcs[path]();
-            }
-            newStateX.funcs[path] = f_1;
-            setState(newStateX);
+            addFunc(path, f_1);
         }
     };
     var unsubscribe = function (path) {
-        var docState = state.docStates[path] || DocState.UNDEFINED;
+        var docState = docStates[path] || DocState.UNDEFINED;
         if (docState === DocState.CONNECTED) {
-            var docStateNext = DocState.UNCONNECTED;
-            state.funcs[path]();
-            var newState = __assign({}, state);
-            newState.docStates[path] = docStateNext;
-            setState(newState);
+            setDocState(path, DocState.UNCONNECTED);
+            funcs[path]();
+            delFunc(path);
         }
     };
     var getDoc = function (path, latest) {
         if (latest === void 0) { latest = true; }
-        var doc = state.docs[path];
+        var doc = docs[path];
         if (doc && !latest) {
             return doc;
         }
         subscribe(path, !latest);
         return doc;
     };
-    var docs = state.docs;
-    return react_1.default.createElement(Context.Provider, { value: { subscribe: subscribe, unsubscribe: unsubscribe, docs: docs, getDoc: getDoc } }, props.children);
+    return react_1.default.createElement(Context.Provider, { value: { subscribe: subscribe, unsubscribe: unsubscribe, getDoc: getDoc } }, props.children);
 };
 exports.default = Provider;
 exports.useDocumentsContext = function () { return react_1.default.useContext(Context); };
