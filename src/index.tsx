@@ -32,7 +32,7 @@ const Provider: React.FC<React.PropsWithChildren<{ app: firebase.app.App }>> = p
 
     if (docState === DocState.UNDEFINED || docState === DocState.UNCONNECTED) {
       setDocState(path, DocState.CONNECTING);
-      console.debug(`onSnapshot:\t(path=${path})`)
+      console.debug(`onSnapshot:\t(path=${path})`);
       const f = props.app
         .firestore()
         .doc(path)
