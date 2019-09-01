@@ -6,7 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 require("firebase/app");
 require("firebase/firestore");
 var react_1 = __importDefault(require("react"));
-var myUseReducer_1 = __importDefault(require("./myUseReducer"));
+var react_hooks_kv_1 = require("react-hooks-kv");
 var DocState;
 (function (DocState) {
     DocState[DocState["UNDEFINED"] = 0] = "UNDEFINED";
@@ -20,9 +20,9 @@ var Context = react_1.default.createContext({
     unsubscribe: function (_) { return _; },
 });
 var Provider = function (props) {
-    var _a = myUseReducer_1.default(), docs = _a[0], setDoc = _a[1];
-    var _b = myUseReducer_1.default(), funcs = _b[0], addFunc = _b[1], delFunc = _b[2];
-    var _c = myUseReducer_1.default(), docStates = _c[0], setDocState = _c[1];
+    var _a = react_hooks_kv_1.useKV(), docs = _a[0], setDoc = _a[1];
+    var _b = react_hooks_kv_1.useKV(), funcs = _b[0], addFunc = _b[1], delFunc = _b[2];
+    var _c = react_hooks_kv_1.useKV(), docStates = _c[0], setDocState = _c[1];
     var subscribe = function (path, once) {
         if (once === void 0) { once = false; }
         var docState = docStates[path] || DocState.UNDEFINED;

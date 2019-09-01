@@ -2,7 +2,7 @@ import 'firebase/app';
 import 'firebase/firestore';
 import React from 'react';
 
-import myUseReducer from './myUseReducer';
+import { useKV } from 'react-hooks-kv';
 
 enum DocState {
   UNDEFINED,
@@ -23,9 +23,9 @@ const Context = React.createContext<IContextType>({
 });
 
 const Provider: React.FC<React.PropsWithChildren<{ app: firebase.app.App }>> = props => {
-  const [docs, setDoc] = myUseReducer<firebase.firestore.DocumentSnapshot>();
-  const [funcs, addFunc, delFunc] = myUseReducer<() => void>();
-  const [docStates, setDocState] = myUseReducer<DocState>();
+  const [docs, setDoc] = useKV<firebase.firestore.DocumentSnapshot>();
+  const [funcs, addFunc, delFunc] = useKV<() => void>();
+  const [docStates, setDocState] = useKV<DocState>();
 
   const subscribe = (path: string, once = false) => {
     const docState = docStates[path] || DocState.UNDEFINED;

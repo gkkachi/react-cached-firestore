@@ -37,7 +37,9 @@
     "tslint-config-prettier": "^1.18.0",
     "typescript": "^3.6.2"
   },
-  "dependencies": {},
+  "dependencies": {
+    "react-hooks-kv": "^0.1.1"
+  },
   "peerDependencies": {
     "react": ">=16.8"
   },
