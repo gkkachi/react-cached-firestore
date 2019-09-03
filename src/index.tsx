@@ -1,4 +1,4 @@
-import 'firebase/app';
+import firebase from 'firebase/app';
 import 'firebase/firestore';
 import React from 'react';
 
@@ -47,6 +47,11 @@ const Provider: React.FC<React.PropsWithChildren<{ app: firebase.app.App }>> = p
           error => {
             setDocState(path, DocState.UNDEFINED);
             f();
+            const user = props.app.auth().currentUser
+            if (user) {
+              console.debug('refresh token')
+              user.getIdToken(true).catch(console.error)
+            }
           },
         );
       addFunc(path, f);
